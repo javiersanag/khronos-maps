@@ -1,8 +1,12 @@
-import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import LocaleSwitcher from '@/components/ui/LocaleSwitcher';
 
-export default function Header() {
-    const t = useTranslations('Navigation');
+/**
+ * Sticky top navigation bar. Uses getTranslations (server-side) to avoid
+ * requiring 'use client' at the header level, keeping it as an RSC.
+ */
+export default async function Header() {
+    const t = await getTranslations('Navigation');
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-foreground/10 bg-background/80 backdrop-blur-md">
