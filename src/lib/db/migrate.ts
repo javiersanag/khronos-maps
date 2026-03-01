@@ -1,6 +1,8 @@
-import { config } from 'dotenv';
-config({ path: '.env.local' });
-
+/**
+ * Migration runner for local development.
+ * Run via: npm run db:migrate
+ * The --env-file=.env.local flag in package.json loads env vars before tsx runs.
+ */
 import { migrate } from 'drizzle-orm/libsql/migrator';
 
 async function main() {
