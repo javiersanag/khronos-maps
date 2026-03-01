@@ -1,115 +1,96 @@
 import { db } from '@/lib/db';
 import { events, scrape_log } from '@/lib/db/schema';
-import { NormalizedEvent, RawEvent, ScrapeResult } from '@/types/event';
+import { NormalizedEvent, ScrapeResult } from '@/types/event';
 import { eq } from 'drizzle-orm';
 
-/**
- * Basic sleep helper for rate limiting and backoff mechanisms.
- */
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** Sleep helper for rate limiting and exponential backoff. */
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 export abstract class BaseScraper {
     protected readonly sourceName: string;
-
-    // Abstract methods to be implemented by child classes (specific to each target site)
-    abstract scrape(): Promise<ScrapeResult>;
-    abstract normalize(raw: RawEvent): NormalizedEvent;
 
     constructor(sourceName: string) {
         this.sourceName = sourceName;
     }
 
+    /** Entry point — implemented by each source-specific scraper. */
+    abstract scrape(): Promise<ScrapeResult>;
+
     /**
-     * Robust fetch wrapper with exponential backoff, timeout, and basic rate limiting (1 req/seq).
-     * @param url The URL to fetch
-     * @param options Native fetch RequestInit options
-     * @param maxRetries How many times to retry transient failures
+     * Fetch a page with a 30-second timeout, up to {@link maxRetries} attempts,
+     * and exponential backoff (1 s → 2 s → 4 s…).
+     * A mandatory 1-second pause before every attempt enforces a 1 req/sec rate limit.
      */
     protected async fetchPage(url: string, options: RequestInit = {}, maxRetries = 3): Promise<Response> {
-        let attempt = 0;
-
-        while (attempt < maxRetries) {
-            // Apply 1s base rate limit between arbitrary consecutive requests
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            // 1 req/sec baseline rate limit
             await sleep(1000);
 
-            // 30 second abort controller per request
             const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), 30000);
+            const timer = setTimeout(() => controller.abort(), 30_000);
 
             try {
-                const response = await fetch(url, {
-                    ...options,
-                    signal: controller.signal,
-                });
-
-                clearTimeout(id);
+                const response = await fetch(url, { ...options, signal: controller.signal });
+                clearTimeout(timer);
 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-
                 return response;
-            } catch (error: any) {
-                clearTimeout(id);
-                attempt++;
-                console.warn(`[${this.sourceName}] Fetch failed for ${url} (Attempt ${attempt}/${maxRetries}): ${error.message}`);
+            } catch (err: unknown) {
+                clearTimeout(timer);
+                const msg = err instanceof Error ? err.message : String(err);
+                console.warn(`[${this.sourceName}] fetch failed (${attempt}/${maxRetries}): ${msg}`);
 
-                if (attempt >= maxRetries) {
-                    throw new Error(`Failed to fetch ${url} after ${maxRetries} attempts`);
+                if (attempt === maxRetries) {
+                    throw new Error(`Failed to fetch "${url}" after ${maxRetries} attempts: ${msg}`);
                 }
 
-                // Exponential backoff: 1s, 2s, 4s...
-                const backoff = Math.pow(2, attempt) * 1000;
-                await sleep(backoff);
+                // Exponential backoff: 2^attempt × 1000 ms (2s, 4s, 8s…)
+                await sleep(Math.pow(2, attempt) * 1000);
             }
         }
 
-        throw new Error('Unreachable fetchPage exit');
+        // Safe unreachable guard — the for-loop always throws or returns before here
+        throw new Error('fetchPage: unreachable');
     }
 
     /**
-     * Shared database upsert logic.
-     * Takes fully normalized events and safely attempts to insert/update them into Turso.
+     * Upsert normalized events into the DB one-by-one so that a single bad
+     * record cannot abort the entire batch.
      */
-    protected async save(normalizedEvents: NormalizedEvent[]): Promise<{ added: number, updated: number, errors: string[] }> {
+    protected async save(normalizedEvents: NormalizedEvent[]): Promise<ScrapeResult['errors'] extends string[] ? { added: number; updated: number; errors: string[] } : never> {
         let added = 0;
         let updated = 0;
         const errors: string[] = [];
 
-        // Processing one-by-one (or in small chunks) ensures one bad event doesn't crash the whole batch
         for (const event of normalizedEvents) {
             try {
-                // Using runnea_id as the primary logical uniqueness constraint per the schema
                 const existing = await db.query.events.findFirst({
-                    where: (events, { eq }) => eq(events.runnea_id, event.runnea_id)
+                    where: (tbl, { eq: eqFn }) => eqFn(tbl.runnea_id, event.runnea_id),
                 });
 
                 if (existing) {
                     await db.update(events)
-                        .set({
-                            ...event,
-                            updated_at: new Date() // Ensure timestamp ticks
-                        })
-                        .where(eq(events.runnea_id, event.runnea_id)); // Drizzle where clause syntax natively
-
+                        .set({ ...event, updated_at: new Date() })
+                        .where(eq(events.runnea_id, event.runnea_id));
                     updated++;
                 } else {
                     await db.insert(events).values(event);
                     added++;
                 }
-
-            } catch (err: any) {
-                console.error(`[${this.sourceName}] Error saving event ${event.slug || event.name}:`, err);
-                errors.push(`Failed to save ${event.slug}: ${err.message}`);
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : String(err);
+                const key = event.slug ?? event.name ?? String(event.runnea_id);
+                console.error(`[${this.sourceName}] Error saving "${key}":`, err);
+                errors.push(`Failed to save "${key}": ${msg}`);
             }
         }
 
         return { added, updated, errors };
     }
 
-    /**
-     * Shared hook to write execution analytics to the DB scrape_log table.
-     */
+    /** Write scrape execution stats to the `scrape_log` table. */
     protected async logResult(result: ScrapeResult): Promise<void> {
         try {
             await db.insert(scrape_log).values({
@@ -119,9 +100,9 @@ export abstract class BaseScraper {
                 errors: result.errors,
                 completed_at: new Date(),
             });
-            console.log(`[${this.sourceName}] Scrape finished. Logged to DB.`);
+            console.log(`[${this.sourceName}] Result logged.`);
         } catch (err) {
-            console.error(`[${this.sourceName}] Critical Failure: Could not write to scrape log:`, err);
+            console.error(`[${this.sourceName}] Failed to write scrape log:`, err);
         }
     }
 }
