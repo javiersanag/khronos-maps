@@ -1,1 +1,17 @@
-{}
+{
+    "HomePage": {
+        "title": "Khronos Maps — Carreras Populares en España",
+        "subtitle": "Descubre carreras populares en toda España",
+        "description": "Descubre y filtra carreras populares en toda España con un mapa interactivo. Road, trail, cross y ultra."
+    },
+    "Navigation": {
+        "map": "Mapa",
+        "about": "Acerca de"
+    },
+    "Common": {
+        "loading": "Cargando...",
+        "error": "Error",
+        "noResults": "No hay resultados",
+        "localeSwitcher": "Idioma"
+    }
+}
