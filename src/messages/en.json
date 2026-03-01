@@ -1,1 +1,17 @@
-{}
+{
+    "HomePage": {
+        "title": "Khronos Maps — Running Events in Spain",
+        "subtitle": "Discover running events across Spain",
+        "description": "Discover and filter running events in Spain with an interactive map. Road, trail, cross and ultra."
+    },
+    "Navigation": {
+        "map": "Map",
+        "about": "About"
+    },
+    "Common": {
+        "loading": "Loading...",
+        "error": "Error",
+        "noResults": "No results",
+        "localeSwitcher": "Language"
+    }
+}
