@@ -1,0 +1,24 @@
+﻿title:	ISSUE-03 ┬À Define Drizzle ORM schema and Turso connection
+state:	OPEN
+author:	javiersanag
+labels:	database, effort: small, priority: critical
+comments:	0
+assignees:	
+projects:	
+milestone:	
+number:	3
+--
+## Description
+
+Create the database schema using Drizzle ORM targeting Turso (libSQL). Define the events table, geocode_cache table, and scrape_log table.
+
+## Acceptance Criteria
+
+- [ ] src/lib/db/schema.ts defines events, geocode_cache, and scrape_log tables
+- [ ] src/lib/db/index.ts exports a configured Drizzle client
+- [ ] Connection reads TURSO_DATABASE_URL and TURSO_AUTH_TOKEN from env
+- [ ] drizzle.config.ts at project root configured for migrations
+- [ ] .env.example includes all required env vars
+- [ ] Initial migration generated with npx drizzle-kit generate
+
+**Depends on**: #1
