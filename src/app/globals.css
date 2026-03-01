@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* ── Background ───────────────────────────────── */
+  --color-background: #0a0a0f;
+  --color-foreground: #ededed;
+  --color-surface: #0f172a;
+  --color-surface-elevated: #1e293b;
+
+  /* ── Terrain accents ──────────────────────────── */
+  --color-road: #3B82F6;
+  --color-trail: #22C55E;
+  --color-ultra: #F97316;
+  --color-cross: #A855F7;
+
+  /* ── Typography ───────────────────────────────── */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
