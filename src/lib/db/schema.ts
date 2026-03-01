@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, text as numeric, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 // Events table
