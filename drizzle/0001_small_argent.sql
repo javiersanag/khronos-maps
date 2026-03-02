@@ -1,0 +1,1 @@
+ALTER TABLE `scrape_log` ADD `source` text NOT NULL;

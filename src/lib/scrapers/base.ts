@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { events, scrape_log } from '@/lib/db/schema';
-import { NormalizedEvent, ScrapeResult } from '@/types/event';
+import { NormalizedEvent, RawEvent, ScrapeResult } from '@/types/event';
 import { eq } from 'drizzle-orm';
 
 /** Sleep helper for rate limiting and exponential backoff. */
@@ -15,6 +15,9 @@ export abstract class BaseScraper {
 
     /** Entry point — implemented by each source-specific scraper. */
     abstract scrape(): Promise<ScrapeResult>;
+
+    /** Each scraper must transform its raw source data into the canonical NormalizedEvent shape. */
+    abstract normalize(raw: RawEvent): NormalizedEvent;
 
     /**
      * Fetch a page with a 30-second timeout, up to {@link maxRetries} attempts,
@@ -59,7 +62,7 @@ export abstract class BaseScraper {
      * Upsert normalized events into the DB one-by-one so that a single bad
      * record cannot abort the entire batch.
      */
-    protected async save(normalizedEvents: NormalizedEvent[]): Promise<ScrapeResult['errors'] extends string[] ? { added: number; updated: number; errors: string[] } : never> {
+    protected async save(normalizedEvents: NormalizedEvent[]): Promise<{ added: number; updated: number; errors: string[] }> {
         let added = 0;
         let updated = 0;
         const errors: string[] = [];
@@ -94,6 +97,7 @@ export abstract class BaseScraper {
     protected async logResult(result: ScrapeResult): Promise<void> {
         try {
             await db.insert(scrape_log).values({
+                source: this.sourceName,
                 items_discovered: result.itemsDiscovered,
                 items_added: result.itemsAdded,
                 items_updated: result.itemsUpdated,

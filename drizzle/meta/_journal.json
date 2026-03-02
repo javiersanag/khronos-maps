@@ -8,6 +8,13 @@
       "when": 1772384635290,
       "tag": "0000_bumpy_wolverine",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1772479454026,
+      "tag": "0001_small_argent",
+      "breakpoints": true
     }
   ]
 }

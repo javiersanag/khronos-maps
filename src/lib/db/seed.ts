@@ -107,6 +107,7 @@ async function main() {
 
         // Record this seed run in the scrape log
         await db.insert(scrape_log).values({
+            source: 'seed',
             items_discovered: mockEvents.length,
             items_added: mockEvents.length,
             items_updated: 0,

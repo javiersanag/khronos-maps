@@ -34,6 +34,8 @@ export const geocode_cache = sqliteTable('geocode_cache', {
 // Scrape log to track scraper runs and results
 export const scrape_log = sqliteTable('scrape_log', {
     id: integer('id').primaryKey({ autoIncrement: true }),
+    /** Identifies which scraper produced this log entry (e.g. 'runnea', 'rockthesport'). */
+    source: text('source').notNull(),
     run_at: integer('run_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
     items_discovered: integer('items_discovered').notNull().default(0),
     items_added: integer('items_added').notNull().default(0),
