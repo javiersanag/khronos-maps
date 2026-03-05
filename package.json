@@ -10,7 +10,8 @@
     "db:migrate": "tsx --env-file=.env.local src/lib/db/migrate.ts",
     "db:generate": "tsx --env-file=.env.local node_modules/drizzle-kit/bin.cjs generate --config=drizzle.config.ts",
     "db:seed": "tsx --env-file=.env.local src/lib/db/seed.ts",
-    "scrape:rockthesport": "tsx --env-file=.env.local scripts/scrape-rts.ts"
+    "scrape:rockthesport": "tsx --env-file=.env.local scripts/scrape-rts.ts",
+    "geocode": "tsx --env-file=.env.local scripts/geocode-events.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",
