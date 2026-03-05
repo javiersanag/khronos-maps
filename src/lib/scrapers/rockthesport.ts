@@ -1,22 +1,84 @@
 import { BaseScraper } from './base';
 import { RawEvent, NormalizedEvent, ScrapeResult } from '../../types/event';
 
-const ROCK_THE_SPORT_BASE_URL = 'https://www.rockthesport.com/es';
-const ROCK_THE_SPORT_API_URL = 'https://publicservice.rockthesport.com/api/event/es/category/running';
-const ROCK_THE_SPORT_API_KEY = 'rts_public_web_2024_a8f3d9e1c4b7';
+const API_BASE = 'https://publicservice.rockthesport.com/api/event/es/category';
+const API_KEY = 'rts_public_web_2024_a8f3d9e1c4b7';
+const PAGE_SIZE = 50;
+const MAX_PAGES = 50; // safety cap — RTS has ~10-20 pages typically for running
 
-// Mapping from RockTheSport province IDs to province names
-// These mapped values should align well with the database/geocoding expectations
+/**
+ * Maps RockTheSport internal province IDs to their canonical Spanish province names.
+ * Sourced from the RTS API responses across running + trail categories.
+ */
 const PROVINCE_MAP: Record<number, string> = {
-    109: 'Valencia',
-    49: 'León',
+    1: 'Álava',
+    2: 'Albacete',
+    3: 'Alicante',
+    4: 'Almería',
+    5: 'Ávila',
+    6: 'Badajoz',
+    7: 'Baleares',
+    8: 'Barcelona',
+    9: 'Burgos',
+    10: 'Cáceres',
+    11: 'Cádiz',
+    12: 'Castellón',
+    13: 'Ciudad Real',
+    14: 'Córdoba',
+    15: 'La Coruña',
+    16: 'Cuenca',
+    17: 'Girona',
+    18: 'Granada',
+    19: 'Guadalajara',
+    20: 'Guipúzcoa',
+    21: 'Huelva',
+    22: 'Huesca',
+    23: 'Jaén',
+    24: 'León',
+    25: 'Lérida',
+    26: 'La Rioja',
+    27: 'Lugo',
+    28: 'Madrid',
+    29: 'Málaga',
+    30: 'Murcia',
+    31: 'Navarra',
+    32: 'Ourense',
+    33: 'Asturias',
+    34: 'Palencia',
+    35: 'Las Palmas',
+    36: 'Pontevedra',
+    37: 'Salamanca',
     38: 'Gipuzkoa',
-    92: 'Cantabria',
-    160: 'Granada',
-    75: 'Navarra',
+    39: 'Santa Cruz de Tenerife',
+    40: 'Cantabria',
+    41: 'Segovia',
+    42: 'Sevilla',
+    43: 'Soria',
+    44: 'Tarragona',
+    45: 'Teruel',
+    46: 'Toledo',
+    47: 'Valencia',
+    48: 'Valladolid',
+    49: 'León',
+    50: 'Zamora',
+    51: 'Zaragoza',
     52: 'Lleida',
-    // We will expand this map as we discover more IDs during scraping,
-    // or we can just fall back to preserving the ID or null if unknown.
+    53: 'Ceuta',
+    54: 'Melilla',
+    75: 'Navarra',
+    92: 'Cantabria',
+    109: 'Valencia',
+    160: 'Granada',
+};
+
+/** Subsport string → distance in km mapping */
+const SUBSPORT_DISTANCE_MAP: Record<string, number> = {
+    '5km': 5,
+    '10km': 10,
+    '15KM': 15,
+    '20KM': 20,
+    'half marathon': 21.097,
+    'marathon': 42.195,
 };
 
 export class RockTheSportScraper extends BaseScraper {
@@ -25,106 +87,123 @@ export class RockTheSportScraper extends BaseScraper {
     }
 
     async scrape(): Promise<ScrapeResult> {
-        const result: ScrapeResult = { itemsDiscovered: 0, itemsAdded: 0, itemsUpdated: 0, errors: [] };
-        try {
-            let pageNumber = 1;
-            let hasMore = true;
+        const result: ScrapeResult = {
+            itemsDiscovered: 0,
+            itemsAdded: 0,
+            itemsUpdated: 0,
+            errors: [],
+        };
 
-            // limit to 2 pages for testing runs
-            while (hasMore && pageNumber <= 2) {
-                console.log(`Fetching RTS page ${pageNumber}...`);
-                const rawEvents = await this.fetchListPage(pageNumber);
-                if (!rawEvents || rawEvents.length === 0) {
-                    hasMore = false;
-                    break;
-                }
-
-                result.itemsDiscovered += rawEvents.length;
-
-                const normalizedEvents: NormalizedEvent[] = [];
-                for (const raw of rawEvents) {
-                    try {
-                        normalizedEvents.push(this.normalize(raw));
-                    } catch (err: unknown) {
-                        const msg = err instanceof Error ? err.message : String(err);
-                        result.errors.push(`Normalization error: ${msg}`);
-                    }
-                }
-
-                const saveResult = await this.save(normalizedEvents);
-                result.itemsAdded += saveResult.added;
-                result.itemsUpdated += saveResult.updated;
-                result.errors.push(...saveResult.errors);
-
-                pageNumber++;
+        for (const sport of ['running', 'trail'] as const) {
+            try {
+                await this.scrapeCategory(sport, result);
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : String(err);
+                result.errors.push(`Fatal error in category "${sport}": ${msg}`);
             }
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
-            result.errors.push(`Fatal scrape error: ${msg}`);
         }
 
         await this.logResult(result);
         return result;
     }
 
-    async fetchListPage(page: number): Promise<RawEvent[]> {
-        const payload = {
-            "(a) orderBy": "data.dates.startedDateTimestamp",
-            "(ge) data.dates.startedDateTimestamp": Date.now(),
-            "kind": "country:65" // Spain
-        };
+    private async scrapeCategory(
+        sport: 'running' | 'trail',
+        result: ScrapeResult,
+    ): Promise<void> {
+        let pageNumber = 1;
+        let hasMore = true;
 
-        const result = await this.fetchPage(ROCK_THE_SPORT_API_URL + `?pageNumber=${page}&pageSize=50`, {
-            method: 'POST',
-            headers: {
-                'x-api-key': ROCK_THE_SPORT_API_KEY,
-                'content-type': 'application/json',
-                'accept': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
+        while (hasMore && pageNumber <= MAX_PAGES) {
+            console.log(`[rockthesport] Fetching ${sport} page ${pageNumber}…`);
+            const rawEvents = await this.fetchListPage(sport, pageNumber);
 
-        const data = await result.json();
-        return data?.data?.items || [];
+            if (!rawEvents.length) {
+                hasMore = false;
+                break;
+            }
+
+            result.itemsDiscovered += rawEvents.length;
+
+            const normalizedEvents: NormalizedEvent[] = [];
+            for (const raw of rawEvents) {
+                try {
+                    normalizedEvents.push(this.normalize(raw));
+                } catch (err: unknown) {
+                    const msg = err instanceof Error ? err.message : String(err);
+                    result.errors.push(`Normalization error (${sport} p${pageNumber}): ${msg}`);
+                }
+            }
+
+            const saveResult = await this.save(normalizedEvents);
+            result.itemsAdded += saveResult.added;
+            result.itemsUpdated += saveResult.updated;
+            result.errors.push(...saveResult.errors);
+
+            // If the page returned fewer than PAGE_SIZE results, it's the last page.
+            hasMore = rawEvents.length >= PAGE_SIZE;
+            pageNumber++;
+        }
     }
 
-    async fetchDetail(event: RawEvent): Promise<any> {
-        // As per the plan, we are skipping individual detail fetching to avoid SPA brittleness.
-        // The list API provides ~90% of what we need.
-        return null;
+    private async fetchListPage(
+        sport: 'running' | 'trail',
+        page: number,
+    ): Promise<RawEvent[]> {
+        const url = `${API_BASE}/${sport}?pageNumber=${page}&pageSize=${PAGE_SIZE}`;
+        const payload = {
+            '(a) orderBy': 'data.dates.startedDateTimestamp',
+            '(ge) data.dates.startedDateTimestamp': Date.now(),
+            kind: 'country:65', // Spain
+        };
+
+        const response = await this.fetchPage(url, {
+            method: 'POST',
+            headers: {
+                'x-api-key': API_KEY,
+                'content-type': 'application/json',
+                accept: 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+        return (data?.data?.items as RawEvent[]) ?? [];
     }
 
     normalize(event: RawEvent): NormalizedEvent {
-        // event is an item from the data.items array
-        const runnea_id = Number(event.eventId); // Use their eventId (integer)
+        const runnea_id = Number(event.eventId);
         const name = String(event.title || 'Unknown Event');
         const slug = String(event.slug || '');
-        const rawDate = event.startedDateIso ? String(event.startedDateIso) : new Date().toISOString();
+        const rawDate = event.startedDateIso
+            ? String(event.startedDateIso)
+            : new Date().toISOString();
         const date = new Date(rawDate);
 
         const provId = event.provinceId as number | undefined;
-        const provinceName = provId ? PROVINCE_MAP[provId] || `Provincia ${provId}` : 'Spain';
-        const location = provinceName; // Just using province as general location for now
+        const province = provId
+            ? (PROVINCE_MAP[provId] ?? `Provincia ${provId}`)
+            : null;
+        const location = province; // province is the finest location available from the list API
 
-        let format = event.sport === 'trail' ? 'Trail' : 'Asfalto';
-        const subsports = event.subsports as string[] | undefined;
-        if (subsports && Array.isArray(subsports)) {
-            if (subsports.includes('ultra marathon')) format = 'Ultra';
+        const sport = String(event.sport ?? '');
+        const subsports = (event.subsports as string[] | undefined) ?? [];
+
+        // Terrain format: prefer subsport hints, fall back to top-level sport field
+        let format = sport === 'trail' ? 'Trail' : 'Asfalto';
+        if (subsports.includes('ultra marathon')) format = 'Ultra';
+
+        // Distances: pick the first recognised subsport, prefer longer distances
+        let distance: number | null = null;
+        for (const sub of subsports) {
+            if (sub in SUBSPORT_DISTANCE_MAP) {
+                const d = SUBSPORT_DISTANCE_MAP[sub];
+                if (distance === null || d > distance) distance = d;
+            }
         }
 
         const website = `https://www.rockthesport.com/es/evento/${slug}`;
         const registration_link = `${website}/inscripcion`;
-
-        // Approximate distances based on subsports array (e.g. '5km', '10km', 'half marathon', 'marathon')
-        let distance: number | null = null;
-        if (subsports && Array.isArray(subsports)) {
-            if (subsports.includes('5km')) distance = 5;
-            else if (subsports.includes('10km')) distance = 10;
-            else if (subsports.includes('half marathon')) distance = 21.097;
-            else if (subsports.includes('marathon')) distance = 42.195;
-            else if (subsports.includes('15KM')) distance = 15;
-            else if (subsports.includes('20KM')) distance = 20;
-        }
 
         return {
             runnea_id,
@@ -132,14 +211,14 @@ export class RockTheSportScraper extends BaseScraper {
             slug,
             date,
             location,
-            province: provinceName,
+            province,
             format,
             distance,
-            elevation: null, // Hard to get from list API
+            elevation: null,     // Not available from list API
             website,
             registration_link,
-            price: null, // Detail required for accurate price
-            status: 'UPCOMING'
+            price: null,          // Not available from list API
+            status: 'UPCOMING',
         };
     }
 }
