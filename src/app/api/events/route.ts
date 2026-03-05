@@ -2,80 +2,62 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { events } from '@/lib/db/schema';
 import { sql, and, eq, gte, lte, asc, desc } from 'drizzle-orm';
+import { eventsQuerySchema } from '@/lib/validations/events';
 
 export async function GET(req: NextRequest) {
     try {
-        const searchParams = req.nextUrl.searchParams;
+        const searchParams = Object.fromEntries(req.nextUrl.searchParams.entries());
+        const result = eventsQuerySchema.safeParse(searchParams);
 
-        // 1. Pagination
-        const limitStr = searchParams.get('limit');
-        const offsetStr = searchParams.get('offset');
-        const limit = limitStr ? parseInt(limitStr, 10) : 50;
-        const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
+        if (!result.success) {
+            return NextResponse.json(
+                { error: 'Invalid query parameters', details: result.error.format() },
+                { status: 400 }
+            );
+        }
 
-        // Ensure safe pagination limits
-        const safeLimit = Math.min(Math.max(1, limit), 100);
-        const safeOffset = Math.max(0, offset);
+        const { limit, offset, bounds, format, minDistance, maxDistance, startDate, endDate, sort } = result.data;
 
         // 2. Build where conditions
         const conditions = [];
 
         // Geolocation Bounds Filter
-        // Format: bounds=latSW,lngSW,latNE,lngNE (e.g. 36.0,-5.0,43.0,3.0)
-        const boundsStr = searchParams.get('bounds');
-        if (boundsStr) {
-            const parts = boundsStr.split(',').map(parseFloat);
-            if (parts.length === 4 && parts.every(p => !isNaN(p))) {
-                const [latSW, lngSW, latNE, lngNE] = parts;
-
-                // SQLite JSON extraction for map bounds
-                conditions.push(sql`json_extract(coordinates, '$.lat') BETWEEN ${latSW} AND ${latNE}`);
-                conditions.push(sql`json_extract(coordinates, '$.lng') BETWEEN ${lngSW} AND ${lngNE}`);
-            }
+        if (bounds) {
+            const { latSW, lngSW, latNE, lngNE } = bounds;
+            // SQLite JSON extraction for map bounds
+            conditions.push(sql`json_extract(coordinates, '$.lat') BETWEEN ${latSW} AND ${latNE}`);
+            conditions.push(sql`json_extract(coordinates, '$.lng') BETWEEN ${lngSW} AND ${lngNE}`);
         }
 
         // Format Filter
-        const formatStr = searchParams.get('format');
-        if (formatStr) {
-            conditions.push(eq(events.format, formatStr));
+        if (format) {
+            conditions.push(eq(events.format, format));
         }
 
         // Distance Filters
-        const minDistanceStr = searchParams.get('minDistance');
-        if (minDistanceStr && !isNaN(parseFloat(minDistanceStr))) {
-            conditions.push(gte(events.distance, parseFloat(minDistanceStr)));
+        if (minDistance !== undefined) {
+            conditions.push(gte(events.distance, minDistance));
         }
 
-        const maxDistanceStr = searchParams.get('maxDistance');
-        if (maxDistanceStr && !isNaN(parseFloat(maxDistanceStr))) {
-            conditions.push(lte(events.distance, parseFloat(maxDistanceStr)));
+        if (maxDistance !== undefined) {
+            conditions.push(lte(events.distance, maxDistance));
         }
 
-        // Date Filters (timestamps)
-        const startDateStr = searchParams.get('startDate');
-        if (startDateStr) {
-            const date = new Date(startDateStr);
-            if (!isNaN(date.getTime())) {
-                conditions.push(gte(events.date, date));
-            }
+        // Date Filters
+        if (startDate) {
+            conditions.push(gte(events.date, startDate));
         }
 
-        const endDateStr = searchParams.get('endDate');
-        if (endDateStr) {
-            const date = new Date(endDateStr);
-            if (!isNaN(date.getTime())) {
-                conditions.push(lte(events.date, date));
-            }
+        if (endDate) {
+            conditions.push(lte(events.date, endDate));
         }
 
         // Combine all filters
         const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
         // 3. Sorting
-        const sortParam = searchParams.get('sort') || 'date_asc';
         let orderByClause;
-
-        switch (sortParam) {
+        switch (sort) {
             case 'date_desc':
                 orderByClause = desc(events.date);
                 break;
@@ -96,8 +78,8 @@ export async function GET(req: NextRequest) {
             db.query.events.findMany({
                 where: whereClause,
                 orderBy: orderByClause,
-                limit: safeLimit,
-                offset: safeOffset,
+                limit,
+                offset,
             }),
             db.select({ count: sql<number>`cast(count(${events.id}) as integer)` })
                 .from(events)
@@ -111,8 +93,8 @@ export async function GET(req: NextRequest) {
             data,
             pagination: {
                 total,
-                limit: safeLimit,
-                offset: safeOffset,
+                limit,
+                offset,
             }
         });
 
