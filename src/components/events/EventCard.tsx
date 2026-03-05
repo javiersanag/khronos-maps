@@ -3,12 +3,20 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { formatDate, formatDistance, getTerrainFromFormat } from '@/lib/utils/format';
 
+/** Props for the EventCard component. */
 interface EventCardProps {
+    /** The canonical event object to display. */
     event: NormalizedEvent;
+    /** Optional click handler for interactivity (e.g. map sync). */
     onClick?: () => void;
+    /** Whether the card is currently highlighted/active. */
     active?: boolean;
 }
 
+/**
+ * Renders a summary card for an event using glassmorphism styling.
+ * Displays title, date, location, distance, price, and terrain badge.
+ */
 export function EventCard({ event, onClick, active }: EventCardProps) {
     const terrain = getTerrainFromFormat(event.format);
 
