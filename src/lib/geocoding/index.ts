@@ -37,7 +37,7 @@ export async function geocode(
         )}&format=json&limit=1&countrycodes=es`;
 
         for (let attempt = 1; attempt <= 2; attempt++) {
-            await sleep(1500); // 1.5s delay to be safe with Nominatim's 1 req/sec policy
+            await sleep(1100); // 1.1s delay to be safe but efficient with Nominatim's 1 req/sec policy
 
             try {
                 response = await fetch(url, {
