@@ -6,6 +6,8 @@
   --color-foreground: #ededed;
   --color-surface: #0f172a;
   --color-surface-elevated: #1e293b;
+  --color-surface-glass: rgba(15, 23, 42, 0.6);
+  --color-border: rgba(255, 255, 255, 0.06);
 
   /* ── Terrain accents ──────────────────────────── */
   --color-road: #3B82F6;
@@ -22,4 +24,37 @@ body {
   background: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
+}
+
+/* ── Leaflet Dark Mode Overrides ────────────────── */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background-color: var(--color-surface-elevated) !important;
+  color: var(--color-foreground) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid var(--color-border);
+}
+
+.leaflet-popup-tip {
+  border-top: none;
+  border-left: none;
+}
+
+/* ── Custom Scrollbars ──────────────────────────── */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
 }

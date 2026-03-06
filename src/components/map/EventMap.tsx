@@ -64,6 +64,8 @@ export interface EventMapProps {
     events: MapEvent[];
     /** ID of the currently selected event (highlights marker). */
     selectedId?: string | null;
+    /** ID of an event to smoothly pan to. Triggered primarily from outside the map (e.g. sidebar click). */
+    flyToId?: string | null;
     /** Called when a marker is clicked with the event's ID. */
     onMarkerClick: (id: string) => void;
     /** Called on every map moveend with the new visible bounds. */
@@ -81,6 +83,23 @@ function InitialBounds({ events }: { events: MapEvent[] }) {
         map.fitBounds(bounds, { padding: [40, 40] });
         fitted.current = true;
     }, [map, events]);
+
+    return null;
+}
+
+// ── Child: fly to selected marker ────────────────────────────────────────────
+function FlyToTracker({ events, flyToId }: { events: MapEvent[], flyToId: string | null | undefined }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!flyToId) return;
+        const target = events.find(e => e.id === flyToId);
+        if (target) {
+            // Keep zoom level reasonably close to see surrounding context, minimum 11
+            const zoom = Math.max(map.getZoom(), 11);
+            map.flyTo([target.lat, target.lng], zoom, { animate: true, duration: 1.2 });
+        }
+    }, [map, events, flyToId]);
 
     return null;
 }
@@ -130,6 +149,7 @@ function GeolocateControl() {
                 cursor: 'pointer',
                 color: '#ededed',
             }}
+            className="focus-visible:ring-2 focus-visible:ring-road focus-visible:outline-none transition-colors hover:bg-slate-800"
         >
             {/* crosshair SVG */}
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -155,7 +175,7 @@ function GeolocateControl() {
  *
  * Must be consumed via the dynamic-import wrapper in map/index.ts (ssr: false).
  */
-export function EventMap({ events, selectedId, onMarkerClick, onBoundsChange }: EventMapProps) {
+export function EventMap({ events, selectedId, flyToId, onMarkerClick, onBoundsChange }: EventMapProps) {
     const iconCache = useRef<Partial<Record<Terrain, L.DivIcon>>>({});
 
     function getIcon(terrain: Terrain): L.DivIcon {
@@ -191,6 +211,7 @@ export function EventMap({ events, selectedId, onMarkerClick, onBoundsChange }: 
                             click: () => onMarkerClick(event.id),
                         }}
                         opacity={selectedId && selectedId !== event.id ? 0.45 : 1}
+                        zIndexOffset={selectedId === event.id ? 1000 : 0}
                     >
                         <Popup>
                             <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>
@@ -202,6 +223,7 @@ export function EventMap({ events, selectedId, onMarkerClick, onBoundsChange }: 
             </MarkerClusterGroup>
 
             <InitialBounds events={events} />
+            <FlyToTracker events={events} flyToId={flyToId} />
             <BoundsWatcher onBoundsChange={onBoundsChange} />
             <GeolocateControl />
         </MapContainer>

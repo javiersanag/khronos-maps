@@ -11,3 +11,5 @@ export const EventMap = dynamic<EventMapProps>(
     () => import('./EventMap').then((m) => m.EventMap),
     { ssr: false }
 );
+
+export type { MapEvent } from './EventMap';
