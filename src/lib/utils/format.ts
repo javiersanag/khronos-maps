@@ -4,12 +4,12 @@
  * @returns A formatted string like "12 Oct 2026" or "TBD" if invalid.
  * @example formatDate('2026-10-12') -> "12 Oct 2026"
  */
-export function formatDate(dateStr: Date | string | null | undefined): string {
+export function formatDate(dateStr: Date | string | null | undefined, locale: string = 'es-ES'): string {
     if (!dateStr) return 'TBD';
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return 'TBD';
 
-    return new Intl.DateTimeFormat('en-GB', {
+    return new Intl.DateTimeFormat(locale, {
         day: 'numeric',
         month: 'short',
         year: 'numeric',

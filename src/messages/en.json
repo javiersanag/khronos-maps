@@ -4,6 +4,20 @@
         "subtitle": "Discover running events across Spain",
         "description": "Discover and filter running events in Spain with an interactive map. Road, trail, cross and ultra."
     },
+    "EventDetail": {
+        "backToMap": "Back to map",
+        "detailsTitle": "Event Details",
+        "locationTitle": "Location",
+        "distance": "Distance",
+        "elevation": "Elevation",
+        "terrain": "Terrain",
+        "price": "Price",
+        "notAvailable": "N/A",
+        "noCoordinates": "Coordinates not available for this event.",
+        "register": "Register",
+        "shareTitle": "Share Event",
+        "nearbyTitle": "Nearby Events"
+    },
     "Navigation": {
         "map": "Map",
         "about": "About"
