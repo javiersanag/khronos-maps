@@ -208,10 +208,10 @@ export class RockTheSportScraper extends BaseScraper {
         return {
             runnea_id,
             name,
-            slug,
-            date,
-            location,
-            province,
+            slug: slug || '',
+            date: date || '',
+            location: location || '',
+            province: province || '',
             format,
             distance,
             elevation: null,     // Not available from list API

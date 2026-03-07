@@ -22,18 +22,19 @@ export function Card({ children, className = '', onClick, active }: CardProps) {
     return (
         <motion.div
             onClick={onClick}
+            tabIndex={interactive ? 0 : undefined}
             whileHover={
                 interactive
-                    ? { scale: 1.01, boxShadow: '0 0 24px rgba(59,130,246,0.18)' }
+                    ? { scale: 1.02, y: -2, boxShadow: '0 8px 30px rgba(59,130,246,0.18)' }
                     : undefined
             }
-            transition={{ duration: 0.18 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
             className={[
-                'rounded-xl border bg-[var(--color-surface-glass)] backdrop-blur-md p-4',
+                'rounded-xl border bg-[var(--color-surface-glass)] backdrop-blur-md p-4 transition-colors',
                 active
                     ? 'border-road shadow-md shadow-road/20'
                     : 'border-[var(--color-border)]',
-                interactive ? 'cursor-pointer' : '',
+                interactive ? 'cursor-pointer focus-visible:ring-2 focus-visible:ring-road focus-visible:outline-none' : '',
                 className,
             ].join(' ')}
         >
