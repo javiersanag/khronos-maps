@@ -204,6 +204,8 @@ export class RockTheSportScraper extends BaseScraper {
 
         const website = `https://www.rockthesport.com/es/evento/${slug}`;
         const registration_link = `${website}/inscripcion`;
+        const rawId = String(event.id || '');
+        const image_url = rawId ? `https://rtsfiles.blob.core.windows.net/evento/${rawId}.jpg` : null;
 
         return {
             runnea_id,
@@ -217,6 +219,7 @@ export class RockTheSportScraper extends BaseScraper {
             elevation: null,     // Not available from list API
             website,
             registration_link,
+            image_url,
             price: null,          // Not available from list API
             status: 'UPCOMING',
         };

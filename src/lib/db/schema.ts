@@ -18,6 +18,7 @@ export const events = sqliteTable('events', {
     price: real('price'),
     status: text('status'),
     coordinates: text('coordinates', { mode: 'json' }).$type<{ lat: number; lng: number }>(),
+    image_url: text('image_url'),
     created_at: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
     updated_at: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
 });
