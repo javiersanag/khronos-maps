@@ -22,38 +22,38 @@ export function EventCard({ event, onClick, active }: EventCardProps) {
     const terrain = getTerrainFromFormat(event.format);
 
     return (
-        <Card onClick={onClick} active={active} className={`flex flex-col gap-3 border-l-4 border-l-${terrain}`}>
+        <Card onClick={onClick} active={active} className={`flex flex-col gap-2.5 border-l-4 border-l-${terrain}`}>
             {/* Header: Name and Date */}
-            <div className="flex justify-between items-start gap-4">
+            <div className="flex justify-between items-start gap-3">
                 <h3
-                    className="font-semibold text-lg leading-tight tracking-tight text-blue-50 line-clamp-2"
+                    className="font-semibold text-base leading-tight tracking-tight text-blue-50 line-clamp-2"
                     title={event.name}
                 >
                     {event.name}
                 </h3>
-                <span className="text-sm font-medium text-slate-400 whitespace-nowrap pt-1">
+                <span className="text-xs font-medium text-slate-400 whitespace-nowrap pt-1">
                     {formatDate(event.date)}
                 </span>
             </div>
 
             {/* Middle: Location */}
-            <div className="text-sm text-slate-300">
+            <div className="text-xs text-slate-300">
                 {event.location}, {event.province}
             </div>
 
             {/* Footer: Metadata and Badges */}
-            <div className="flex items-center justify-between mt-1">
-                <div className="flex items-center gap-4 text-sm font-medium text-slate-300">
+            <div className="flex items-center justify-between mt-0.5">
+                <div className="flex items-center gap-3 text-xs font-medium text-slate-300">
                     {event.distance ? (
-                        <span className="flex items-center gap-1.5" aria-hidden="true">
-                            <Ruler size={14} className="text-slate-400" />
+                        <span className="flex items-center gap-1" aria-hidden="true">
+                            <Ruler size={12} className="text-slate-400" />
                             {formatDistance(event.distance)}
                         </span>
                     ) : null}
 
                     {event.price ? (
-                        <span className="flex items-center gap-1.5" aria-hidden="true">
-                            <Euro size={14} className="text-slate-400" />
+                        <span className="flex items-center gap-1" aria-hidden="true">
+                            <Euro size={12} className="text-slate-400" />
                             {event.price}€
                         </span>
                     ) : null}
