@@ -30,7 +30,7 @@ export function Card({ children, className = '', onClick, active }: CardProps) {
             }
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className={[
-                'rounded-xl border bg-[var(--color-surface-glass)] backdrop-blur-md p-4 transition-colors',
+                'rounded-xl border bg-[var(--color-surface-glass)] backdrop-blur-md p-3 transition-colors',
                 active
                     ? 'border-road shadow-md shadow-road/20'
                     : 'border-[var(--color-border)]',
