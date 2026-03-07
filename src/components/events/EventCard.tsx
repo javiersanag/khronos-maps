@@ -1,6 +1,7 @@
 import { NormalizedEvent } from '@/types/event';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Link } from '@/i18n/routing';
 import { Ruler, Euro } from 'lucide-react';
 import { formatDate, formatDistance, getTerrainFromFormat } from '@/lib/utils/format';
 
@@ -25,12 +26,14 @@ export function EventCard({ event, onClick, active }: EventCardProps) {
         <Card onClick={onClick} active={active} className={`flex flex-col gap-2.5 border-l-4 border-l-${terrain}`}>
             {/* Header: Name and Date */}
             <div className="flex justify-between items-start gap-3">
-                <h3
-                    className="font-semibold text-base leading-tight tracking-tight text-blue-50 line-clamp-2"
-                    title={event.name}
-                >
-                    {event.name}
-                </h3>
+                <Link href={`/event/${event.slug}`} className="group relative z-10" prefetch={false}>
+                    <h3
+                        className="font-semibold text-base leading-tight tracking-tight text-blue-50 line-clamp-2 group-hover:text-road transition-colors underline-offset-4 decoration-road/30"
+                        title={event.name}
+                    >
+                        {event.name}
+                    </h3>
+                </Link>
                 <span className="text-xs font-medium text-slate-400 whitespace-nowrap pt-1">
                     {formatDate(event.date)}
                 </span>

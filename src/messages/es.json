@@ -4,6 +4,20 @@
         "subtitle": "Descubre carreras populares en toda España",
         "description": "Descubre y filtra carreras populares en toda España con un mapa interactivo. Road, trail, cross y ultra."
     },
+    "EventDetail": {
+        "backToMap": "Volver al mapa",
+        "detailsTitle": "Detalles del Evento",
+        "locationTitle": "Ubicación",
+        "distance": "Distancia",
+        "elevation": "Desnivel",
+        "terrain": "Terreno",
+        "price": "Precio",
+        "notAvailable": "N/A",
+        "noCoordinates": "Coordenadas no disponibles para este evento.",
+        "register": "Inscribirse",
+        "shareTitle": "Compartir Evento",
+        "nearbyTitle": "Eventos Cercanos"
+    },
     "Navigation": {
         "map": "Mapa",
         "about": "Acerca de"
