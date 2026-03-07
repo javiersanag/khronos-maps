@@ -7,6 +7,8 @@ import { NormalizedEvent } from '@/types/event';
 import { EventCard } from '@/components/events/EventCard';
 import { EventCardSkeleton } from '@/components/events/EventCardSkeleton';
 
+import { useRouter } from '@/i18n/routing';
+
 interface MobileEventDrawerProps {
     events: NormalizedEvent[];
     totalEvents: number;
@@ -26,6 +28,7 @@ export function MobileEventDrawer({
     onSelectId,
     onRetry
 }: MobileEventDrawerProps) {
+    const router = useRouter();
     const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
     // Auto-scroll selected card into view
@@ -112,7 +115,7 @@ export function MobileEventDrawer({
                                         <EventCard
                                             event={event}
                                             active={selectedId === stringId}
-                                            onClick={() => onSelectId(stringId)}
+                                            onClick={() => router.push(`/event/${event.slug}`)}
                                         />
                                     </motion.div>
                                 );

@@ -10,8 +10,10 @@ import { EventCard } from '@/components/events/EventCard';
 import { EventCardSkeleton } from '@/components/events/EventCardSkeleton';
 import { MobileEventDrawer } from '@/components/layout/MobileEventDrawer';
 import { getTerrainFromFormat } from '@/lib/utils/format';
+import { useRouter } from '@/i18n/routing';
 
 export function SplitViewClient() {
+    const router = useRouter();
     const [bounds, setBounds] = useState<LatLngBounds | null>(null);
     const [debouncedBounds] = useDebounce(bounds, 500);
     const [events, setEvents] = useState<NormalizedEvent[]>([]);
@@ -152,7 +154,7 @@ export function SplitViewClient() {
                                     <EventCard
                                         event={event}
                                         active={selectedId === stringId}
-                                        onClick={() => setSelectedId(stringId)}
+                                        onClick={() => router.push(`/event/${event.slug}`)}
                                     />
                                 </motion.div>
                             );
