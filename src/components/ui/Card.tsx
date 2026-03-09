@@ -13,8 +13,8 @@ interface CardProps {
 }
 
 /**
- * Glassmorphism surface card.
- * Interactive variant (onClick) gets a Framer Motion hover glow.
+ * Premium dark surface card.
+ * Interactive variant (onClick) gets a Framer Motion hover elevation.
  */
 export function Card({ children, className = '', onClick, active }: CardProps) {
     const interactive = Boolean(onClick);
@@ -25,16 +25,16 @@ export function Card({ children, className = '', onClick, active }: CardProps) {
             tabIndex={interactive ? 0 : undefined}
             whileHover={
                 interactive
-                    ? { scale: 1.02, y: -2, boxShadow: '0 8px 30px rgba(59,130,246,0.18)' }
+                    ? { scale: 1.01, y: -2, boxShadow: '0 8px 30px rgba(245, 158, 11, 0.1)' }
                     : undefined
             }
-            transition={{ duration: 0.15, ease: 'easeOut' }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             className={[
-                'rounded-xl border bg-[var(--color-surface-glass)] backdrop-blur-md p-3 transition-colors',
+                'rounded-[12px] border bg-[var(--color-surface-elevated)] p-4 transition-all duration-200',
                 active
-                    ? 'border-road shadow-md shadow-road/20'
-                    : 'border-[var(--color-border)]',
-                interactive ? 'cursor-pointer focus-visible:ring-2 focus-visible:ring-road focus-visible:outline-none' : '',
+                    ? 'border-[var(--color-brand-accent)] shadow-md shadow-[var(--color-brand-accent)]/20'
+                    : 'border-[var(--color-border)] hover:border-[var(--color-border)]',
+                interactive ? 'cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--color-brand-accent)] focus-visible:outline-none hover:bg-[#2c2c30]' : '',
                 className,
             ].join(' ')}
         >

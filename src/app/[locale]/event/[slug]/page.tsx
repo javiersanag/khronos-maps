@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { events } from '@/lib/db/schema';
@@ -33,6 +34,7 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
         openGraph: {
             title: event.name,
             description: `Descubre los detalles de ${event.name} en ${event.location}.`,
+            images: event.image_url ? [event.image_url] : [],
         },
     };
 }
@@ -66,11 +68,27 @@ export default async function EventPage({ params }: EventPageProps) {
                 </Link>
             </header>
 
-            {/* Hero Section (Gradient Fallback) */}
-            <section className="relative pt-32 pb-16 px-6 md:px-12 flex flex-col justify-end min-h-[40vh] border-b border-white/5">
-                {/* Fallback gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-road/30 via-background to-background z-0" />
-                <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-0" />
+            {/* Hero Section */}
+            <section className="relative pt-32 pb-16 px-6 md:px-12 flex flex-col justify-end min-h-[40vh] border-b border-white/5 overflow-hidden">
+                {event.image_url ? (
+                    <>
+                        <Image
+                            src={event.image_url}
+                            alt={event.name}
+                            fill
+                            priority
+                            className="object-cover z-0"
+                            sizes="100vw"
+                        />
+                        <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px] z-0" />
+                    </>
+                ) : (
+                    <>
+                        {/* Fallback gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-road/30 via-background to-background z-0" />
+                        <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-0" />
+                    </>
+                )}
 
                 <div className="relative z-10 max-w-4xl mx-auto w-full">
                     <Badge terrain={terrain} className="mb-4">{event.format}</Badge>
