@@ -9,10 +9,10 @@ interface BadgeProps {
 }
 
 const terrainConfig: Record<Terrain, { label: string; classes: string }> = {
-    road: { label: 'Road', classes: 'bg-road/15  text-road  border-road/30' },
-    trail: { label: 'Trail', classes: 'bg-trail/15 text-trail border-trail/30' },
-    ultra: { label: 'Ultra', classes: 'bg-ultra/15 text-ultra border-ultra/30' },
-    cross: { label: 'Cross', classes: 'bg-cross/15 text-cross border-cross/30' },
+    road: { label: 'Road', classes: 'bg-road/20 text-road border-transparent' },
+    trail: { label: 'Trail', classes: 'bg-trail/20 text-trail border-transparent' },
+    ultra: { label: 'Ultra', classes: 'bg-ultra/20 text-ultra border-transparent' },
+    cross: { label: 'Cross', classes: 'bg-cross/20 text-cross border-transparent' },
 };
 
 /**

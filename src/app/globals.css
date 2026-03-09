@@ -2,12 +2,16 @@
 
 @theme inline {
   /* ── Background ───────────────────────────────── */
-  --color-background: #0a0a0f;
+  --color-background: #121212;
   --color-foreground: #ededed;
-  --color-surface: #0f172a;
-  --color-surface-elevated: #1e293b;
-  --color-surface-glass: rgba(15, 23, 42, 0.6);
-  --color-border: rgba(255, 255, 255, 0.06);
+  --color-surface: #18181B;
+  --color-surface-elevated: #27272A;
+  --color-surface-glass: rgba(24, 24, 27, 0.6);
+  --color-border: rgba(255, 255, 255, 0.05);
+
+  /* ── Brand ────────────────────────────────────── */
+  --color-brand-accent: #F59E0B;
+  /* Amber/Orange */
 
   /* ── Terrain accents ──────────────────────────── */
   --color-road: #3B82F6;
@@ -43,7 +47,7 @@ body {
 /* ── Custom Scrollbars ──────────────────────────── */
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: #334155 transparent;
+  scrollbar-color: #3f3f46 transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -55,6 +59,54 @@ body {
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #3f3f46;
   border-radius: 4px;
+}
+
+/* ── Leaflet Zoom Controls Overrides ────────────── */
+.leaflet-bar {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.leaflet-bar a {
+  background-color: var(--color-surface-elevated) !important;
+  color: var(--color-foreground) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  transition: background-color 0.2s;
+}
+
+.leaflet-bar a:hover {
+  background-color: #3f3f46 !important;
+  color: var(--color-brand-accent) !important;
+}
+
+.leaflet-bar a:last-child {
+  border-bottom: none !important;
+}
+
+/* ── Leaflet Marker Clusters Overrides ──────────── */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background-color: rgba(245, 158, 11, 0.25) !important;
+  /* Outer amber ring */
+  border-radius: 50% !important;
+}
+
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background-image: linear-gradient(135deg, #F59E0B, #ea580c) !important;
+  background-color: transparent !important;
+  color: white !important;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4) !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 50% !important;
 }

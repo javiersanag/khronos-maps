@@ -2,7 +2,7 @@ import { NormalizedEvent } from '@/types/event';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Link } from '@/i18n/routing';
-import { Ruler, Euro } from 'lucide-react';
+import { Ruler, Euro, Calendar } from 'lucide-react';
 import { formatDate, formatDistance, getTerrainFromFormat } from '@/lib/utils/format';
 
 /** Props for the EventCard component. */
@@ -16,31 +16,37 @@ interface EventCardProps {
 }
 
 /**
- * Renders a summary card for an event using glassmorphism styling.
+ * Renders a summary card for an event using premium dark styling.
  * Displays title, date, location, distance, price, and terrain badge.
  */
 export function EventCard({ event, onClick, active }: EventCardProps) {
     const terrain = getTerrainFromFormat(event.format);
 
     return (
-        <Card onClick={onClick} active={active} className={`flex flex-col gap-2.5 border-l-4 border-l-${terrain}`}>
+        <Card onClick={onClick} active={active} className={`group flex flex-col gap-3 relative overflow-hidden`}>
+            {/* Subtle left border accent on hover indicator */}
+            <div className={`absolute left-0 top-0 bottom-0 w-1 bg-${terrain} opacity-50 group-hover:opacity-100 transition-opacity`} />
+
             {/* Header: Name and Date */}
-            <div className="flex justify-between items-start gap-3">
-                <Link href={`/event/${event.slug}`} className="group relative z-10" prefetch={false}>
+            <div className="flex flex-col gap-1.5 pl-2">
+                <Link href={`/event/${event.slug}`} className="relative z-10 w-fit" prefetch={false}>
                     <h3
-                        className="font-semibold text-base leading-tight tracking-tight text-blue-50 line-clamp-2 group-hover:text-road transition-colors underline-offset-4 decoration-road/30"
+                        className="font-bold text-base leading-tight tracking-tight text-white line-clamp-2 group-hover:text-[var(--color-brand-accent)] transition-colors"
                         title={event.name}
                     >
+                        {/* Remove any manual uppercase rendering logic if it exists, styling naturally */}
                         {event.name}
                     </h3>
                 </Link>
-                <span className="text-xs font-medium text-slate-400 whitespace-nowrap pt-1">
-                    {formatDate(event.date)}
-                </span>
+
+                <div className="flex items-center gap-1.5 text-[13px] font-medium text-slate-300">
+                    <Calendar size={14} className="text-slate-400" />
+                    <span>{formatDate(event.date)}</span>
+                </div>
             </div>
 
             {/* Middle: Location */}
-            <div className="text-xs text-slate-300">
+            <div className="text-[13px] text-slate-400 pl-2">
                 {event.location}, {event.province}
             </div>
 

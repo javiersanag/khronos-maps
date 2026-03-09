@@ -35,17 +35,23 @@ const TERRAIN_COLORS: Record<Terrain, string> = {
     cross: '#A855F7',
 };
 
-/** Creates a 14×14 SVG circle DivIcon for a terrain type. */
+/** Creates a 18x18 SVG circle DivIcon for a terrain type with premium glow. */
 function makeTerrainIcon(terrain: Terrain): L.DivIcon {
     const color = TERRAIN_COLORS[terrain];
     return L.divIcon({
-        className: '',
-        html: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-            <circle cx="9" cy="9" r="7" fill="${color}" stroke="#0a0a0f" stroke-width="2"/>
+        className: 'custom-map-marker',
+        html: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
+            <defs>
+                <filter id="glow-${terrain}" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+            </defs>
+            <circle cx="11" cy="11" r="6" fill="${color}" filter="url(#glow-${terrain})" stroke="#ffffff" stroke-width="1.5"/>
         </svg>`,
-        iconSize: [18, 18],
-        iconAnchor: [9, 9],
-        popupAnchor: [0, -12],
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+        popupAnchor: [0, -11],
     });
 }
 

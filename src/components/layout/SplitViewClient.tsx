@@ -103,7 +103,7 @@ export function SplitViewClient() {
                     </div>
                 </div>
 
-                <div className="p-4 flex flex-col gap-4 relative min-h-full">
+                <div className="p-4 flex flex-col gap-3 relative min-h-full">
                     {/* Error State */}
                     {error && !isLoading && (
                         <div className="text-center py-12 flex flex-col items-center gap-3">
@@ -127,7 +127,7 @@ export function SplitViewClient() {
 
                     {/* Skeletons Overlay */}
                     {isLoading && events.length === 0 && (
-                        <div className="absolute inset-x-4 top-4 flex flex-col gap-4">
+                        <div className="absolute inset-x-4 top-4 flex flex-col gap-3">
                             {Array.from({ length: 5 }).map((_, i) => (
                                 <EventCardSkeleton key={`skeleton-${i}`} />
                             ))}
